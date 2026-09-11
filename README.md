@@ -26,6 +26,9 @@
 | 아이템 | 4종 (미정) |
 | 캐릭터 능력 | 캐릭터별 개별 구현 |
 
+
+<img width="2160" height="2514" alt="image" src="https://github.com/user-attachments/assets/65a48a79-40aa-4fed-ae60-7728eae6b954" />
+
 ## 🖥️ 서버 명세서
 
 ### 1. 게임을 켰다
