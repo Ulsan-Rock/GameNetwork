@@ -11,7 +11,8 @@
  - 서필창
  - 정채원
 
- 
+ <img width="2000" height="1600" alt="image" src="https://github.com/user-attachments/assets/03c74520-a236-46e2-b5ef-e8054faf7d63" />
+
 ### 게임 정보
 
 | 항목 | 내용 |
