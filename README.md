@@ -79,3 +79,23 @@
 - **땅이 부서지는 맵** — 시간이 지나며 바닥 타일이 하나씩 파괴되어 낙사 위험이 커진다
 - **자기장 맵** — 안전 구역이 시간에 따라 계속 좁아진다
 - **총알 난사 맵** — 맵 자체에서 환경 투사체가 날아온다
+
+
+## 📦 클라이언트 ↔ 서버 패킷 정의
+
+각 상황에서 클라이언트와 서버가 주고받는 패킷의 방향, 타입, 페이로드를 정의한다.
+
+### 1. 접속 · 로비 · 매칭
+<img width="2080" height="1908" alt="패킷정의_1_접속로비매칭" src="https://github.com/user-attachments/assets/bd303504-6160-498a-8950-c30734697373" />
+
+
+### 2. 인게임 전투 — 이동 · 능력 · 아이템 · 발사
+<img width="2080" height="1894" alt="image" src="https://github.com/user-attachments/assets/23ed5421-b274-4d09-bb10-24ea7202f005" />
+
+
+### 3. 인게임 전투 — 피격 판정 · 맵 기믹
+<img width="2080" height="1744" alt="image" src="https://github.com/user-attachments/assets/8085e90b-c136-4be5-bdb4-62a460f2ce16" />
+
+
+### 4. 종료 · 예외 처리
+<img width="2080" height="1892" alt="image" src="https://github.com/user-attachments/assets/dee40662-5a02-442a-a0e5-7d21ffecd5a4" />
