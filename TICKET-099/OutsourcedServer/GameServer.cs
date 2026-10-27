@@ -69,7 +69,8 @@ namespace BattleArena
                 ClientSession session = new ClientSession(clientSocket, playerId);
                 _sessions.TryAdd(playerId, session);
 
-                _ = session.RunAsync();
+                // [실험 — 업체 의견 3] 업체 권고대로 await 를 붙여 봅니다. 실험 브랜치에서만!
+                await session.RunAsync();
             }
         }
 
