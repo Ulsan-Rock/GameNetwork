@@ -73,7 +73,10 @@ namespace BattleArena
             int read = 0;
             while (read < size)
             {
-                int n = await Task.Run(() => socket.Receive(buffer, read, size - read, SocketFlags.None));
+                // [A2] 기다리는 동안 쓰레드를 반납하는 진짜 비동기 수신
+                //      Task.Run 으로 블로킹 Receive 를 감싸면 접속자마다 쓰레드를 붙잡습니다 (4주차 16쪽)
+                int n = await socket.ReceiveAsync(
+                    new ArraySegment<byte>(buffer, read, size - read), SocketFlags.None);
                 if (n == 0) return false;   // 상대가 연결을 닫음
                 read += n;
             }
