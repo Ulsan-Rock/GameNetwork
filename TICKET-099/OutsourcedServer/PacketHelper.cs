@@ -47,10 +47,8 @@ namespace BattleArena
             byte[] header = new byte[4];
 
             // 먼저 헤더 4바이트를 읽어 본문 길이를 알아냅니다.
-            // Receive는 블로킹 함수라서 Task.Run으로 감싸 비동기화했습니다.
-            int n = await Task.Run(() => socket.Receive(header, 0, 4, SocketFlags.None));
-
-            if (n == 0) return null;          // 상대가 연결을 닫음
+            // [A1] 4바이트를 다 받을 때까지 반복합니다
+            if (!await ReadExactAsync(socket, header, 4)) return null;   // 상대가 연결을 닫음
 
             int bodyLength = BitConverter.ToInt32(header, 0);
 
@@ -60,9 +58,26 @@ namespace BattleArena
             byte[] body = new byte[bodyLength];
 
             // 알아낸 길이만큼 본문을 읽습니다.
-            await Task.Run(() => socket.Receive(body, 0, bodyLength, SocketFlags.None));
+            // [A1] 반만 도착했어도 나머지가 올 때까지 반복합니다
+            if (!await ReadExactAsync(socket, body, bodyLength)) return null;
 
             return Encoding.UTF8.GetString(body, 0, bodyLength);
+        }
+
+        // ═══════════════════════════════════════
+        // [A1] 요청한 바이트 수를 다 받을 때까지 반복해서 읽습니다
+        //   TCP 는 스트림이라 패킷이 잘려서 올 수 있습니다 (3주차 9~10쪽)
+        // ═══════════════════════════════════════
+        private static async Task<bool> ReadExactAsync(Socket socket, byte[] buffer, int size)
+        {
+            int read = 0;
+            while (read < size)
+            {
+                int n = await Task.Run(() => socket.Receive(buffer, read, size - read, SocketFlags.None));
+                if (n == 0) return false;   // 상대가 연결을 닫음
+                read += n;
+            }
+            return true;
         }
     }
 }
