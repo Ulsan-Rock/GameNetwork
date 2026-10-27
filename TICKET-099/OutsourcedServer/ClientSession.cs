@@ -175,6 +175,13 @@ namespace BattleArena
             catch { }
 
             GameServer.Instance.RemoveSession(PlayerId);
+
+            // [A8] 남은 사람들에게 퇴장 알림 (5주차 코드와 같음)
+            GameServer.Instance.Broadcast(new NoticePacket
+            {
+                Type    = PacketType.PLAYER_OUT,
+                Message = $"{Nickname}님이 나갔습니다."
+            });
         }
     }
 }
