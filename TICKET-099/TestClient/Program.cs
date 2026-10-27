@@ -153,6 +153,10 @@ namespace BattleArena
                 _udp = new Socket(AddressFamily.InterNetwork,
                                   SocketType.Dgram, ProtocolType.Udp);
 
+                // [A7] 받기 전에 내 쪽 주소를 정해야 합니다 (포트 0 = OS가 빈 포트 배정)
+                //      Bind 없이 ReceiveFrom 을 부르면 예외가 나서 수신 루프가 바로 끝납니다
+                _udp.Bind(new IPEndPoint(IPAddress.Any, 0));
+
                 _udpServer = new IPEndPoint(IPAddress.Parse(SERVER_IP), StudentConfig.UdpPort);
 
                 _seq = 0;
