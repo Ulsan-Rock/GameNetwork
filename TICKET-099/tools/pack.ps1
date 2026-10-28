@@ -5,7 +5,7 @@
     증거\                    (png + logs)
     측정결과_<학번>.csv       (LoadTester가 만든 그대로)
     소스\                    (sln, Shared, OutsourcedServer, TestClient, LoadTester — bin·obj·.vs 제외)
-    git.txt                  (저장소 주소 + git log --oneline --graph --all)
+    git.txt                  (저장소 주소 + git log --oneline --graph --all --decorate + 커밋 시각)
 
   사용 예)  tools\pack
 #>
@@ -61,21 +61,55 @@ Get-ChildItem -LiteralPath $srcDir -Recurse -Directory -Force |
     ForEach-Object { if (Test-Path -LiteralPath $_.FullName) { Remove-Item -LiteralPath $_.FullName -Recurse -Force } }
 Get-ChildItem -LiteralPath $srcDir -Recurse -File -Filter '*.user' | Remove-Item -Force
 
-# git.txt
+# git.txt (git 이 stderr 에 경고를 써도 멈추지 않게 이 구간만 Continue)
 Push-Location $root
+$eapOld = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
 try {
     $url = (& git remote get-url origin 2>$null)
     if (-not $url) { $url = '(원격 저장소 주소 없음 — git remote add origin <주소> 후 다시 실행)'; $missing += '저장소 주소' }
     $branch = (& git rev-parse --abbrev-ref HEAD 2>$null)
-    $log = (& git --no-pager log --oneline --graph --all 2>$null) -join "`r`n"
-    $body = "저장소 : $url`r`n브랜치 : $branch`r`n`r`n$log`r`n"
+    $log = (& git --no-pager log --oneline --graph --all --decorate 2>$null) -join "`r`n"
+    $base = (& git merge-base HEAD origin/main 2>$null)
+    $note = ''; $dated = ''
+    if ($base) {
+        $short = (& git rev-parse --short $base 2>$null)
+        $n1 = (& git rev-list --count "$base..HEAD" 2>$null)
+        $exp = @(& git branch --list 'exp/*' --format='%(refname:short)' 2>$null | Where-Object { $_ })
+        $n2 = 0; foreach ($e in $exp) { $n2 += [int](& git rev-list --count "HEAD..$e" 2>$null) }
+        $note = "이번 과제 커밋 : $branch ${n1}개" + $(if ($exp.Count) { " + " + ($exp -join ', ') + " ${n2}개" } else { '' }) + "`r`n" +
+                "$short 와 그 아래 커밋은 2~5주차 수업 때 만든 것 (이번 과제 이전)`r`n"
+        # 푸시 상태 (원격 브랜치와 같은 커밋인지)
+        foreach ($bname in @($branch) + $exp) {
+            $loc = (& git rev-parse --short $bname 2>$null)
+            $rem = (& git rev-parse --short "origin/$bname" 2>$null)
+            if (-not $rem) { $rem = '(원격에 없음)' }
+            $note += "푸시 상태 : $bname 로컬 $loc / origin $rem" + $(if ($loc -eq $rem) { ' (같음)' } else { ' (다름 — git push 필요)' }) + "`r`n"
+        }
+        # 커밋 시각 목록 (이번 과제 커밋만, 오래된 것부터)
+        $dated = "`r`n[커밋 시각 — $branch]`r`n" + ((& git --no-pager log --reverse --format='%h  %ad  %s' --date=format:'%Y-%m-%d %H:%M:%S' "$base..HEAD" 2>$null) -join "`r`n") + "`r`n"
+        foreach ($e in $exp) {
+            $dated += "`r`n[커밋 시각 — $e]`r`n" + ((& git --no-pager log --reverse --format='%h  %ad  %s' --date=format:'%Y-%m-%d %H:%M:%S' "HEAD..$e" 2>$null) -join "`r`n") + "`r`n"
+        }
+    }
+    $body = "저장소 : $url`r`n브랜치 : $branch`r`n$note`r`n[git log --oneline --graph --all --decorate]`r`n$log`r`n$dated"
     [System.IO.File]::WriteAllText((Join-Path $stage 'git.txt'), $body, (New-Object System.Text.UTF8Encoding($true)))
-} finally { Pop-Location }
+} finally { Pop-Location; $ErrorActionPreference = $eapOld }
 
-# zip (한글 파일 이름이 깨지지 않게 UTF-8로)
+# zip (한글 파일 이름이 깨지지 않게 UTF-8로, 폴더 구분자는 / 로 — 어느 OS에서 풀어도 폴더가 살아 있게)
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-[System.IO.Compression.ZipFile]::CreateFromDirectory($stage, $zip, [System.IO.Compression.CompressionLevel]::Optimal, $false, [System.Text.Encoding]::UTF8)
+$fs = [System.IO.File]::Open($zip, [System.IO.FileMode]::Create)
+$za = New-Object System.IO.Compression.ZipArchive($fs, [System.IO.Compression.ZipArchiveMode]::Create, $false, [System.Text.Encoding]::UTF8)
+try {
+    $stageFull = (Resolve-Path -LiteralPath $stage).Path
+    foreach ($f in Get-ChildItem -LiteralPath $stageFull -Recurse -File) {
+        $rel = $f.FullName.Substring($stageFull.Length).TrimStart('\', '/') -replace '\\', '/'
+        [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($za, $f.FullName, $rel, [System.IO.Compression.CompressionLevel]::Optimal)
+    }
+} finally {
+    $za.Dispose()
+    $fs.Dispose()
+}
 
 $pngs = @(Get-ChildItem -LiteralPath $stage -Recurse -Filter '*.png' -File).Count
 Write-Host ''
