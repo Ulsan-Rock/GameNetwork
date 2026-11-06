@@ -96,34 +96,31 @@
 ### 3. 인게임 전투 — 피격 판정 · 맵 기믹
 <img width="2080" height="1744" alt="image" src="https://github.com/user-attachments/assets/8085e90b-c136-4be5-bdb4-62a460f2ce16" />
 
+### 4. 종료 · 예외 처리
+<img width="2080" height="1892" alt="image" src="https://github.com/user-attachments/assets/dee40662-5a02-442a-a0e5-7d21ffecd5a4" />
+
+
 ## 🗄️ 데이터베이스 설계 (ERD)
 
 참가 정보와 결과, 아이템 기록, 방 운영을 나눠 관계형 DB로 설계했다.
 
 ### 1. 핵심 ERD — 테이블 관계도
 
-![ERD_1_핵심](<img width="2114" height="1186" alt="KakaoTalk_20261106_110810804" src="https://github.com/user-attachments/assets/a95eb950-a439-4d20-ad6f-a94c3f7951cf" />
-)
+<img width="2114" height="1186" alt="ERD_1_핵심" src="https://github.com/user-attachments/assets/a95eb950-a439-4d20-ad6f-a94c3f7951cf" />
 
 - `players`·`characters`·`maps`·`matches`를 기준 테이블로 두고, 매치 참가 정보(`match_players`)와 최종 결과(`match_results`)를 분리했다.
 - 참가자 1명당 결과는 0..1개라서, 진행 중이거나 비정상 종료된 매치는 결과 없이 참가 기록만 남는다.
 
 ### 2. 아이템 ERD — 종류와 획득 기록
 
-![ERD_2_아이템](<img width="2114" height="1190" alt="KakaoTalk_20261106_110810804_01" src="https://github.com/user-attachments/assets/e3fb80ab-e273-4580-bb99-63a750d2fda6" />
-)
+<img width="2114" height="1190" alt="ERD_2_아이템" src="https://github.com/user-attachments/assets/e3fb80ab-e273-4580-bb99-63a750d2fda6" />
 
 - 아이템 종류와 효과는 `item_types`에서 따로 관리하고, 획득할 때마다 `item_pickups`에 새 행을 추가한다.
 - 즉시 적용되는 버프는 서버 메모리에서 처리하며, 획득 로그 저장은 선택 기능으로 둔다.
 
 ### 3. 방 운영 확장 ERD — 초대방과 준비 상태
 
-![ERD_3_방운영](<img width="2120" height="1190" alt="KakaoTalk_20261106_110810804_02" src="https://github.com/user-attachments/assets/9251487a-ca6e-4609-bf37-2ed77fa2d507" />
-)
+<img width="2120" height="1190" alt="ERD_3_방운영" src="https://github.com/user-attachments/assets/9251487a-ca6e-4609-bf37-2ed77fa2d507" />
 
 - 친구 초대 코드(`rooms`)와 4인 방 구성·준비 상태(`room_members`)를 DB에 남길 때 쓰는 확장안이다.
 - 실시간 방 상태 동기화는 메모리/Redis로 처리하고, 기록이 필요한 경우에만 두 테이블을 도입한다.
-
-
-### 4. 종료 · 예외 처리
-<img width="2080" height="1892" alt="image" src="https://github.com/user-attachments/assets/dee40662-5a02-442a-a0e5-7d21ffecd5a4" />
